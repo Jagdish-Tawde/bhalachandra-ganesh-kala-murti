@@ -104,6 +104,12 @@ create policy "Authenticated admins can update site settings"
   using (true)
   with check (true);
 
+drop policy if exists "Authenticated admins can insert site settings" on public.site_settings;
+create policy "Authenticated admins can insert site settings"
+  on public.site_settings for insert
+  to authenticated
+  with check (true);
+
 insert into storage.buckets (
   id,
   name,

@@ -125,6 +125,19 @@ a {
   width: 40px;
 }
 
+.instagram-button {
+  background:
+    radial-gradient(circle at 30% 105%, #feda75 0 24%, #fa7e1e 38%, transparent 50%),
+    linear-gradient(135deg, #833ab4 0%, #c13584 42%, #e1306c 62%, #fd1d1d 78%, #f77737 100%);
+  border-color: transparent;
+  color: #fff;
+}
+
+.instagram-button:hover {
+  box-shadow: 0 10px 24px rgba(193, 53, 132, 0.28);
+  transform: translateY(-2px);
+}
+
 .menu-button {
   display: none;
 }
@@ -362,6 +375,16 @@ a {
   box-shadow: 0 14px 40px rgba(71, 33, 15, 0.08);
 }
 
+.murti-card {
+  transition: border-color 160ms ease, box-shadow 160ms ease, transform 160ms ease;
+}
+
+.murti-card:hover {
+  border-color: #f05a0a;
+  box-shadow: 0 22px 54px rgba(71, 33, 15, 0.16);
+  transform: translateY(-5px) scale(1.015);
+}
+
 .image-wrap {
   aspect-ratio: 4 / 3;
   border-radius: 8px 8px 0 0;
@@ -370,11 +393,24 @@ a {
 }
 
 .image-wrap img,
-.detail-image img,
-.recent-row img,
-.preview-image {
+.recent-row img {
   height: 100%;
   object-fit: cover;
+  width: 100%;
+}
+
+.image-wrap img {
+  transition: transform 180ms ease;
+}
+
+.murti-card:hover .image-wrap img {
+  transform: scale(1.04);
+}
+
+.detail-image img,
+.preview-image {
+  height: 100%;
+  object-fit: contain;
   width: 100%;
 }
 
@@ -485,11 +521,14 @@ a {
   justify-items: center;
   padding: 18px 12px;
   text-align: center;
+  transition: border-color 160ms ease, box-shadow 160ms ease, transform 160ms ease;
 }
 
 .category-card.selected,
 .category-card:hover {
   border-color: #f05a0a;
+  box-shadow: 0 18px 42px rgba(71, 33, 15, 0.14);
+  transform: translateY(-4px);
 }
 
 .category-card img {
@@ -497,7 +536,12 @@ a {
   border: 1px solid #ffe0bd;
   border-radius: 50%;
   object-fit: cover;
+  transition: transform 180ms ease;
   width: 82px;
+}
+
+.category-card:hover img {
+  transform: scale(1.06);
 }
 
 .category-card strong {
@@ -507,6 +551,112 @@ a {
 .category-card span {
   color: #806557;
   font-size: 13px;
+}
+
+.about-section,
+.contact-section {
+  padding-top: 28px;
+}
+
+.about-layout,
+.contact-layout {
+  display: grid;
+  gap: 20px;
+  grid-template-columns: minmax(0, 1.1fr) minmax(320px, 0.9fr);
+}
+
+.about-layout > div,
+.contact-card {
+  background: #fff;
+  border: 1px solid #ead9c8;
+  border-radius: 8px;
+  box-shadow: 0 14px 40px rgba(71, 33, 15, 0.08);
+  padding: 22px;
+}
+
+.about-layout p {
+  color: #60483d;
+  font-size: 18px;
+  line-height: 1.75;
+  margin: 0;
+}
+
+.about-highlights {
+  display: grid;
+  gap: 12px;
+}
+
+.about-highlights .feature {
+  background: #fff8ef;
+  border-radius: 8px;
+  justify-content: flex-start;
+}
+
+.contact-card {
+  color: #3a241c;
+}
+
+.address-card {
+  align-items: flex-start;
+  display: flex;
+  gap: 14px;
+}
+
+.contact-card strong {
+  display: block;
+  font-size: 18px;
+  margin-bottom: 8px;
+}
+
+.contact-card p {
+  color: #60483d;
+  font-size: 17px;
+  line-height: 1.65;
+  margin: 0 0 18px;
+}
+
+.contact-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.contact-people {
+  display: grid;
+  gap: 14px;
+}
+
+.contact-person {
+  border-bottom: 1px solid #f0dfd2;
+  padding-bottom: 14px;
+}
+
+.contact-person:last-child {
+  border-bottom: 0;
+  padding-bottom: 0;
+}
+
+.contact-person span {
+  color: #3a241c;
+  display: block;
+  font-weight: 900;
+  margin-bottom: 8px;
+}
+
+.contact-person div {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.contact-person a {
+  color: #a20d1b;
+  font-weight: 900;
+  text-decoration: none;
+}
+
+.contact-whatsapp {
+  margin-top: 18px;
 }
 
 .back-button {
@@ -525,6 +675,7 @@ a {
 
 .detail-image {
   aspect-ratio: 1 / 1;
+  background: #fff;
   border-radius: 8px;
   overflow: hidden;
 }
@@ -795,15 +946,6 @@ a {
   display: none;
 }
 
-.preview-image {
-  aspect-ratio: 1 / 1;
-  border-radius: 8px;
-  display: block;
-  margin-top: 14px;
-  max-width: 140px;
-  object-fit: cover;
-}
-
 .upload-info {
   color: #806557;
   font-size: 13px;
@@ -811,10 +953,60 @@ a {
   margin: 10px 0 0;
 }
 
+.preview-card {
+  align-items: center;
+  background: #fff8ef;
+  border: 1px solid #ead9c8;
+  border-radius: 8px;
+  display: flex;
+  gap: 14px;
+  margin-top: 14px;
+  padding: 12px;
+}
+
+.preview-image {
+  border-radius: 8px;
+  display: block;
+  flex: 0 0 auto;
+  height: 96px;
+  object-fit: cover;
+  width: 96px;
+}
+
+.preview-card strong {
+  color: #3a241c;
+  display: block;
+  margin-bottom: 6px;
+}
+
+.preview-card span {
+  color: #806557;
+  display: block;
+  font-size: 13px;
+  font-weight: 800;
+}
+
 .form-submit {
   border: 0;
   margin-top: 16px;
   width: 100%;
+}
+
+.form-actions {
+  display: flex;
+  gap: 12px;
+  margin-top: 16px;
+}
+
+.form-actions .form-submit {
+  flex: 1;
+  margin-top: 0;
+}
+
+.form-actions .outline-button {
+  background: #fff;
+  min-width: 124px;
+  padding: 12px 16px;
 }
 
 .recent-row {
@@ -827,7 +1019,13 @@ a {
 }
 
 .recent-row.editable {
-  grid-template-columns: 64px minmax(0, 1fr) 128px 82px;
+  align-items: start;
+  grid-template-areas:
+    "thumb details"
+    "thumb status"
+    "thumb actions";
+  grid-template-columns: 96px minmax(0, 1fr);
+  padding: 18px 0;
 }
 
 .recent-row.compact {
@@ -843,6 +1041,30 @@ a {
   border-radius: 8px;
 }
 
+.recent-row.editable img {
+  background: #fff8ef;
+  grid-area: thumb;
+  height: 96px;
+  object-fit: contain;
+  width: 96px;
+}
+
+.recent-row.editable > div:first-of-type {
+  grid-area: details;
+  min-width: 0;
+}
+
+.recent-row.editable strong {
+  display: block;
+  font-size: 18px;
+  line-height: 1.2;
+  overflow-wrap: anywhere;
+}
+
+.recent-row.editable span {
+  line-height: 1.35;
+}
+
 .recent-row select {
   background: #fff;
   border: 1px solid #decfc1;
@@ -852,15 +1074,46 @@ a {
   width: 100%;
 }
 
+.recent-row.editable select {
+  grid-area: status;
+  max-width: 240px;
+}
+
+.row-actions {
+  display: flex;
+  gap: 8px;
+  grid-area: actions;
+  max-width: 240px;
+}
+
+.edit-button,
 .delete-button {
+  align-items: center;
   background: #fff;
-  border: 1px solid #f0b8bd;
+  border: 1px solid #ead9c8;
   border-radius: 8px;
-  color: #a20d1b;
   cursor: pointer;
+  display: inline-flex;
   font-weight: 900;
+  gap: 6px;
+  justify-content: center;
   min-height: 40px;
   padding: 8px 10px;
+}
+
+.edit-button {
+  color: #7a3a08;
+  flex: 1;
+}
+
+.delete-button {
+  border-color: #f0b8bd;
+  color: #a20d1b;
+  flex: 1;
+}
+
+.edit-button:hover {
+  background: #fff8ef;
 }
 
 .delete-button:hover {
@@ -915,12 +1168,20 @@ a {
   border: 1px solid #ead9c8;
   border-radius: 8px;
   overflow: hidden;
+  transition: border-color 160ms ease, box-shadow 160ms ease, transform 160ms ease;
+}
+
+.gallery-grid article:hover {
+  border-color: #f05a0a;
+  box-shadow: 0 18px 42px rgba(71, 33, 15, 0.14);
+  transform: translateY(-4px);
 }
 
 .gallery-grid img {
   aspect-ratio: 4 / 3;
+  background: #fff8ef;
   display: block;
-  object-fit: cover;
+  object-fit: contain;
   width: 100%;
 }
 
@@ -979,6 +1240,10 @@ a {
   margin-top: 18px;
 }
 
+.settings-form {
+  margin: 0;
+}
+
 .settings-note {
   background: #fff8ef;
   border: 1px solid #ead9c8;
@@ -995,6 +1260,12 @@ a {
 .settings-note span {
   color: #806557;
   overflow-wrap: anywhere;
+}
+
+.settings-save {
+  border: 0;
+  margin-top: 16px;
+  min-width: 180px;
 }
 
 @media (max-width: 980px) {
@@ -1017,6 +1288,8 @@ a {
   .detail-layout,
   .admin-shell,
   .admin-grid,
+  .about-layout,
+  .contact-layout,
   .gallery-grid {
     grid-template-columns: 1fr;
   }
@@ -1058,7 +1331,7 @@ a {
     display: inline-flex;
   }
 
-  .icon-button,
+  .icon-button:not(.instagram-button),
   .whatsapp-button {
     display: none;
   }
@@ -1117,8 +1390,19 @@ a {
   .stats-grid,
   .form-grid,
   .spec-grid,
-  .category-grid {
+  .category-grid,
+  .settings-grid {
     grid-template-columns: 1fr;
+  }
+
+  .address-card {
+    display: grid;
+  }
+
+  .contact-actions .primary-button,
+  .contact-actions .outline-button,
+  .contact-whatsapp {
+    width: 100%;
   }
 
   .admin-content {
@@ -1132,10 +1416,22 @@ a {
   }
 
   .recent-row,
-  .recent-row.editable,
   .recent-row.compact,
   .admin-table > div {
     grid-template-columns: 58px 1fr;
+  }
+
+  .recent-row.editable {
+    grid-template-areas:
+      "thumb details"
+      "thumb status"
+      "thumb actions";
+    grid-template-columns: 76px minmax(0, 1fr);
+  }
+
+  .recent-row.editable img {
+    height: 76px;
+    width: 76px;
   }
 
   .settings-grid {
@@ -1148,8 +1444,23 @@ a {
   }
 
   .recent-row select,
-  .delete-button,
+  .row-actions,
   .admin-table .status {
     grid-column: 2;
+  }
+
+  .recent-row.editable select,
+  .recent-row.editable .row-actions {
+    grid-column: auto;
+    max-width: none;
+  }
+
+  .row-actions {
+    flex-wrap: wrap;
+  }
+
+  .edit-button,
+  .delete-button {
+    flex: 1;
   }
 }

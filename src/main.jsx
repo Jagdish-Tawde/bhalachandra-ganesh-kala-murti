@@ -8,10 +8,13 @@ import {
   Heart,
   Home,
   ImagePlus,
+  Instagram,
   LayoutDashboard,
+  MapPin,
   Menu,
   MessageCircle,
   PackagePlus,
+  Pencil,
   Phone,
   Search,
   Settings,
@@ -37,46 +40,18 @@ const initialMurtis = [
     description: 'Beautifully handcrafted Dagdu Sheth Ganpati Murti with premium finishing and natural colors.',
     image: 'https://images.unsplash.com/photo-1605640840605-14ac1855827b?auto=format&fit=crop&w=900&q=80',
   },
-  {
-    id: 'GM-118',
-    name: 'Lalbaugcha Raja',
-    category: 'Lalbaug Style',
-    height: '3.0 ft',
-    material: 'Shadu Mati',
-    price: 22000,
-    status: 'Reserved',
-    featured: true,
-    description: 'Royal Lalbaug style murti with detailed ornaments and expressive finishing.',
-    image: 'https://images.unsplash.com/photo-1567591414240-e9c1e59f3e06?auto=format&fit=crop&w=900&q=80',
-  },
-  {
-    id: 'GM-076',
-    name: 'Moraya Ganpati',
-    category: 'Traditional',
-    height: '2.0 ft',
-    material: 'Eco Friendly',
-    price: 12500,
-    status: 'Available',
-    featured: false,
-    description: 'Traditional home Ganpati idol made with eco-friendly materials.',
-    image: 'https://images.unsplash.com/photo-1591047139829-d91aecb6caea?auto=format&fit=crop&w=900&q=80',
-  },
-  {
-    id: 'GM-045',
-    name: 'Bal Ganesh',
-    category: 'Bal Ganesh',
-    height: '1.5 ft',
-    material: 'Eco Friendly',
-    price: 8000,
-    status: 'Available',
-    featured: true,
-    description: 'Compact Bal Ganesh murti for home pooja and smaller mandaps.',
-    image: 'https://images.unsplash.com/photo-1630317376392-29b8636e6366?auto=format&fit=crop&w=900&q=80',
-  },
 ];
 
 const categories = ['All', 'Traditional', 'Eco Friendly', 'Dagdu Sheth', 'Lalbaug Style', 'Bal Ganesh'];
+const materialOptions = ['Shadu Mati', 'Eco Friendly', 'Clay', 'Fiber', 'POP (Plaster of Paris)'];
 const availabilityOptions = ['Available', 'Booked', 'Reserved', 'Sold', 'Hidden'];
+const instagramUrl = 'https://www.instagram.com/bhalchandra_ganesh_murti_kendr?igsh=MWc1ajdkYzU1MW0ycw==';
+const shopAddress = 'Maratha Mandal Hall, Near Shridhar Gas Agency, Maratha Mandal Road, Nehru Nagar, Kankavli.';
+const mapsUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(shopAddress)}`;
+const contactPersons = [
+  { name: 'Parag Dhalavlkar', phones: ['9325810960', '8149156061'] },
+  { name: 'Pintu Dicholkar', phones: ['8087865238', '7972664068'] },
+];
 const defaultSettings = {
   shopName: 'Bhalachandra Ganesh Kala Murti',
   whatsappNumber: '+91 89752 17511',
@@ -145,8 +120,22 @@ function normalizePhoneNumber(value) {
   return value.replace(/[^\d]/g, '');
 }
 
+function mobileDigits(value) {
+  const digits = normalizePhoneNumber(value);
+  return digits.length === 12 && digits.startsWith('91') ? digits.slice(2) : digits;
+}
+
+function isValidMobileNumber(value) {
+  return mobileDigits(value).length === 10;
+}
+
+function whatsappPhoneNumber(value) {
+  const phone = mobileDigits(value);
+  return phone.length === 10 ? `91${phone}` : '';
+}
+
 function whatsappLink(number, message = '') {
-  const phone = normalizePhoneNumber(number);
+  const phone = whatsappPhoneNumber(number);
   if (!phone) return '#';
   const text = message ? `&text=${encodeURIComponent(message)}` : '';
   const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
@@ -155,10 +144,15 @@ function whatsappLink(number, message = '') {
     : `https://web.whatsapp.com/send?phone=${phone}${text}`;
 }
 
+function phoneLink(number) {
+  const phone = mobileDigits(number);
+  return phone ? `tel:${phone}` : '#';
+}
+
 function latestSettings(currentSettings) {
   const saved = localStorage.getItem('ganpati-site-settings');
   const current = saved ? { ...currentSettings, ...JSON.parse(saved) } : currentSettings;
-  return normalizePhoneNumber(current.whatsappNumber)
+  return isValidMobileNumber(current.whatsappNumber)
     ? current
     : { ...current, whatsappNumber: defaultSettings.whatsappNumber };
 }
@@ -166,7 +160,7 @@ function latestSettings(currentSettings) {
 function openWhatsApp(event, settings, murtiName = '') {
   event.preventDefault();
   const current = latestSettings(settings);
-  const phone = normalizePhoneNumber(current.whatsappNumber);
+  const phone = whatsappPhoneNumber(current.whatsappNumber);
 
   if (!phone) {
     alert('Please add WhatsApp number in Admin Settings first.');
@@ -258,14 +252,19 @@ function currency(value) {
 
 function useMurtiStore() {
   const [murtis, setMurtis] = useState(() => {
+    if (hasSupabaseConfig) return [];
+
     const saved = localStorage.getItem('ganpati-murtis');
     return saved ? JSON.parse(saved) : initialMurtis;
   });
 
   const saveMurtis = (next) => {
     setMurtis(next);
-    localStorage.setItem('ganpati-murtis', JSON.stringify(next));
-    window.dispatchEvent(new Event('ganpati-murtis-updated'));
+
+    if (!hasSupabaseConfig) {
+      localStorage.setItem('ganpati-murtis', JSON.stringify(next));
+      window.dispatchEvent(new Event('ganpati-murtis-updated'));
+    }
   };
 
   useEffect(() => {
@@ -282,9 +281,7 @@ function useMurtiStore() {
         return;
       }
 
-      if (data?.length) {
-        setMurtis(data.map(fromSupabaseMurti));
-      }
+      setMurtis((data || []).map(fromSupabaseMurti));
     };
 
     loadSupabaseMurtis();
@@ -292,6 +289,8 @@ function useMurtiStore() {
 
   useEffect(() => {
     const syncMurtis = () => {
+      if (hasSupabaseConfig) return;
+
       const saved = localStorage.getItem('ganpati-murtis');
       setMurtis(saved ? JSON.parse(saved) : initialMurtis);
     };
@@ -312,25 +311,27 @@ function useSiteSettings() {
   const [settings, setSettings] = useState(() => {
     const saved = localStorage.getItem('ganpati-site-settings');
     const parsed = saved ? { ...defaultSettings, ...JSON.parse(saved) } : defaultSettings;
-    if (parsed.whatsappNumber === '+91 99999 99999' || !normalizePhoneNumber(parsed.whatsappNumber)) {
+    if (parsed.whatsappNumber === '+91 99999 99999' || !isValidMobileNumber(parsed.whatsappNumber)) {
       return { ...parsed, whatsappNumber: defaultSettings.whatsappNumber };
     }
     return parsed;
   });
 
-  const saveSettings = (next) => {
+  const saveSettings = async (next) => {
     setSettings(next);
     localStorage.setItem('ganpati-site-settings', JSON.stringify(next));
     document.title = next.shopName;
     window.dispatchEvent(new Event('ganpati-settings-updated'));
 
     if (hasSupabaseConfig) {
-      supabase
+      const { error } = await supabase
         .from('site_settings')
-        .upsert(toSupabaseSettings(next), { onConflict: 'id' })
-        .then(({ error }) => {
-          if (error) console.error('Could not save settings to Supabase:', error.message);
-        });
+        .upsert(toSupabaseSettings(next), { onConflict: 'id' });
+
+      if (error) {
+        console.error('Could not save settings to Supabase:', error.message);
+        throw error;
+      }
     }
   };
 
@@ -364,7 +365,7 @@ function useSiteSettings() {
       const saved = localStorage.getItem('ganpati-site-settings');
       if (!saved) return;
       const parsed = { ...defaultSettings, ...JSON.parse(saved) };
-      setSettings(normalizePhoneNumber(parsed.whatsappNumber) ? parsed : { ...parsed, whatsappNumber: defaultSettings.whatsappNumber });
+      setSettings(isValidMobileNumber(parsed.whatsappNumber) ? parsed : { ...parsed, whatsappNumber: defaultSettings.whatsappNumber });
     };
 
     window.addEventListener('storage', syncSettings);
@@ -528,11 +529,16 @@ function Header({ settings, view, setView, mobileMenuOpen, setMobileMenuOpen }) 
         <button className={view === 'home' ? 'active' : ''} onClick={() => go('home')}>Home</button>
         <button onClick={() => goToSection('collection')}>Murtis</button>
         <button onClick={() => goToSection('categories')}>Categories</button>
+        <button onClick={() => goToSection('about')}>About</button>
+        <button onClick={() => goToSection('contact')}>Contact</button>
       </nav>
       <div className="header-actions">
         <button className="icon-button" onClick={() => goToSection('collection')} aria-label="Search murtis">
           <Search size={18} />
         </button>
+        <a className="icon-button instagram-button" href={instagramUrl} target="_blank" rel="noreferrer" aria-label="Open Instagram page">
+          <Instagram size={18} />
+        </a>
         <a className="whatsapp-button" href={whatsappLink(settings.whatsappNumber, inquiryMessage(settings))} onClick={(event) => openWhatsApp(event, settings)} target="_blank" rel="noreferrer">
           <MessageCircle size={18} />
           WhatsApp
@@ -630,12 +636,82 @@ function PublicHome({ murtis, allMurtis, settings, query, setQuery, category, se
                   document.getElementById('collection')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
                 }}
               >
-                <img src={preview.image} alt={item} />
+                {preview && <img src={preview.image} alt={item} />}
                 <strong>{item}</strong>
                 <span>{count} murtis</span>
               </button>
             );
           })}
+        </div>
+      </section>
+
+      <section id="about" className="section about-section">
+        <div className="section-heading">
+          <div>
+            <p>About Us</p>
+            <h2>Handcrafted Ganpati Murtis With Devotion</h2>
+          </div>
+        </div>
+        <div className="about-layout">
+          <div>
+            <p>
+              Bhalachandra Ganesh Kala Murti creates handcrafted Ganpati murtis with traditional detailing,
+              careful finishing, and festival-ready presentation. Our collection includes home Ganpati idols,
+              Dagdu Sheth style designs, Bal Ganesh murtis, eco-friendly options, and custom selections for the season.
+            </p>
+          </div>
+          <div className="about-highlights">
+            <Feature icon={<ShieldCheck />} title="Traditional detailing" />
+            <Feature icon={<Boxes />} title="All sizes available" />
+            <Feature icon={<CheckCircle2 />} title="Festival bookings" />
+          </div>
+        </div>
+      </section>
+
+      <section id="contact" className="section contact-section">
+        <div className="section-heading">
+          <div>
+            <p>Visit Us</p>
+            <h2>Contact And Address</h2>
+          </div>
+        </div>
+        <div className="contact-layout">
+          <div className="contact-card address-card">
+            <MapPin size={24} />
+            <div>
+              <strong>Workshop Address</strong>
+              <p>{shopAddress}</p>
+              <div className="contact-actions">
+                <a className="primary-button" href={mapsUrl} target="_blank" rel="noreferrer">
+                  <MapPin size={18} />
+                  Open Maps
+                </a>
+                <a className="outline-button" href={instagramUrl} target="_blank" rel="noreferrer">
+                  <Instagram size={18} />
+                  Instagram
+                </a>
+              </div>
+            </div>
+          </div>
+          <div className="contact-card">
+            <strong>Contact Persons</strong>
+            <div className="contact-people">
+              {contactPersons.map((person) => (
+                <div key={person.name} className="contact-person">
+                  <span>{person.name}</span>
+                  <div>
+                    {person.phones.map((phone) => (
+                      <a key={phone} href={phoneLink(phone)}>{phone}</a>
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </div>
+            <a className="whatsapp-button contact-whatsapp" href={whatsappLink(settings.whatsappNumber, inquiryMessage(settings))} onClick={(event) => openWhatsApp(event, settings)} target="_blank" rel="noreferrer">
+              <MessageCircle size={18} />
+              WhatsApp Inquiry
+            </a>
+          </div>
         </div>
       </section>
     </main>
@@ -726,7 +802,7 @@ function MurtiDetail({ murti, setView, settings, addInquiry }) {
             <MessageCircle size={18} />
             Enquire on WhatsApp
           </a>
-          <a className="outline-button wide" href={normalizePhoneNumber(settings.whatsappNumber) ? `tel:${normalizePhoneNumber(settings.whatsappNumber)}` : '#'}>
+          <a className="outline-button wide" href={phoneLink(settings.whatsappNumber)}>
             <Phone size={18} />
             Call Now
           </a>
@@ -764,7 +840,7 @@ function AdminPanel({ murtis, saveMurtis, settings, saveSettings, inquiries }) {
   const [activePanel, setActivePanel] = useState('dashboard');
   const [adminSearch, setAdminSearch] = useState('');
   const [uploadInfo, setUploadInfo] = useState('');
-  const [form, setForm] = useState({
+  const defaultMurtiForm = () => ({
     name: '',
     category: 'Traditional',
     height: '',
@@ -774,6 +850,8 @@ function AdminPanel({ murtis, saveMurtis, settings, saveSettings, inquiries }) {
     description: '',
     image: '',
   });
+  const [form, setForm] = useState(defaultMurtiForm);
+  const [editingMurtiId, setEditingMurtiId] = useState('');
 
   const stats = {
     total: murtis.length,
@@ -789,6 +867,27 @@ function AdminPanel({ murtis, saveMurtis, settings, saveSettings, inquiries }) {
   }, [adminSearch, murtis]);
 
   const updateForm = (key, value) => setForm((current) => ({ ...current, [key]: value }));
+
+  const resetMurtiForm = () => {
+    setForm(defaultMurtiForm());
+    setEditingMurtiId('');
+    setUploadInfo('');
+  };
+
+  const startEditMurti = (murti) => {
+    setEditingMurtiId(murti.id);
+    setForm({
+      name: murti.name,
+      category: murti.category,
+      height: murti.height,
+      material: murti.material || 'Shadu Mati',
+      price: String(murti.price || ''),
+      status: murti.status,
+      description: murti.description,
+      image: murti.image,
+    });
+    setUploadInfo('Editing existing murti. Upload a new image only if you want to replace it.');
+  };
 
   useEffect(() => {
     if (!hasSupabaseConfig) return;
@@ -819,6 +918,7 @@ function AdminPanel({ murtis, saveMurtis, settings, saveSettings, inquiries }) {
     const confirmed = window.confirm(`Delete ${murti?.name || 'this murti'}? This will remove it from the public website.`);
     if (!confirmed) return;
     saveMurtis(murtis.filter((item) => item.id !== murtiId));
+    if (editingMurtiId === murtiId) resetMurtiForm();
 
     if (hasSupabaseConfig && isUuid(murtiId)) {
       const { error } = await supabase
@@ -855,7 +955,7 @@ function AdminPanel({ murtis, saveMurtis, settings, saveSettings, inquiries }) {
     }
   };
 
-  const addMurti = async (event) => {
+  const saveMurti = async (event) => {
     event.preventDefault();
 
     try {
@@ -868,46 +968,54 @@ function AdminPanel({ murtis, saveMurtis, settings, saveSettings, inquiries }) {
 
       const nextMurti = {
         ...form,
-        id: `GM-${Math.floor(100 + Math.random() * 900)}`,
+        id: editingMurtiId || `GM-${Math.floor(100 + Math.random() * 900)}`,
         price: Number(form.price || 0),
-        featured: false,
+        featured: murtis.find((murti) => murti.id === editingMurtiId)?.featured || false,
         image: imageUrl,
       };
 
-      if (hasSupabaseConfig) {
-        const { data, error } = await supabase
-          .from('murtis')
-          .insert({
-            name: nextMurti.name,
-            category: nextMurti.category,
-            height: nextMurti.height,
-            material: nextMurti.material,
-            price: nextMurti.price,
-            status: nextMurti.status,
-            featured: nextMurti.featured,
-            description: nextMurti.description,
-            image_url: nextMurti.image,
-          })
-          .select()
-          .single();
+      const murtiPayload = {
+        name: nextMurti.name,
+        category: nextMurti.category,
+        height: nextMurti.height,
+        material: nextMurti.material,
+        price: nextMurti.price,
+        status: nextMurti.status,
+        featured: nextMurti.featured,
+        description: nextMurti.description,
+        image_url: nextMurti.image,
+      };
 
-        if (error) throw error;
-        saveMurtis([fromSupabaseMurti(data), ...murtis]);
+      if (hasSupabaseConfig) {
+        if (editingMurtiId && isUuid(editingMurtiId)) {
+          const { data, error } = await supabase
+            .from('murtis')
+            .update({ ...murtiPayload, updated_at: new Date().toISOString() })
+            .eq('id', editingMurtiId)
+            .select()
+            .single();
+
+          if (error) throw error;
+          saveMurtis(murtis.map((murti) => (murti.id === editingMurtiId ? fromSupabaseMurti(data) : murti)));
+        } else {
+          const { data, error } = await supabase
+            .from('murtis')
+            .insert(murtiPayload)
+            .select()
+            .single();
+
+          if (error) throw error;
+          saveMurtis([fromSupabaseMurti(data), ...murtis]);
+        }
       } else {
-        saveMurtis([nextMurti, ...murtis]);
+        saveMurtis(
+          editingMurtiId
+            ? murtis.map((murti) => (murti.id === editingMurtiId ? nextMurti : murti))
+            : [nextMurti, ...murtis]
+        );
       }
 
-      setForm({
-        name: '',
-        category: 'Traditional',
-        height: '',
-        material: 'Shadu Mati',
-        price: '',
-        status: settings.defaultVisibility || 'Available',
-        description: '',
-        image: '',
-      });
-      setUploadInfo('');
+      resetMurtiForm();
     } catch (error) {
       setUploadInfo(`Could not save murti: ${error.message}`);
     }
@@ -952,10 +1060,13 @@ function AdminPanel({ murtis, saveMurtis, settings, saveSettings, inquiries }) {
             form={form}
             updateForm={updateForm}
             handleImage={handleImage}
-            addMurti={addMurti}
+            saveMurti={saveMurti}
+            editingMurtiId={editingMurtiId}
+            cancelEditMurti={resetMurtiForm}
             adminSearch={adminSearch}
             setAdminSearch={setAdminSearch}
             searchedMurtis={searchedMurtis}
+            startEditMurti={startEditMurti}
             updateMurtiStatus={updateMurtiStatus}
             deleteMurti={deleteMurti}
             uploadInfo={uploadInfo}
@@ -1082,13 +1193,27 @@ function DashboardPanel({ stats, murtis }) {
   );
 }
 
-function MurtisPanel({ form, updateForm, handleImage, addMurti, adminSearch, setAdminSearch, searchedMurtis, updateMurtiStatus, deleteMurti, uploadInfo }) {
+function MurtisPanel({
+  form,
+  updateForm,
+  handleImage,
+  saveMurti,
+  editingMurtiId,
+  cancelEditMurti,
+  adminSearch,
+  setAdminSearch,
+  searchedMurtis,
+  startEditMurti,
+  updateMurtiStatus,
+  deleteMurti,
+  uploadInfo,
+}) {
   return (
     <div className="admin-grid">
-      <form className="admin-form" onSubmit={addMurti}>
+      <form className="admin-form" onSubmit={saveMurti}>
         <div className="form-title">
-          <PackagePlus size={22} />
-          <h2>Add New Murti</h2>
+          {editingMurtiId ? <Pencil size={22} /> : <PackagePlus size={22} />}
+          <h2>{editingMurtiId ? 'Edit Murti' : 'Add New Murti'}</h2>
         </div>
         <div className="form-grid">
           <Field label="Murti Name">
@@ -1104,10 +1229,7 @@ function MurtisPanel({ form, updateForm, handleImage, addMurti, adminSearch, set
           </Field>
           <Field label="Material">
             <select value={form.material} onChange={(event) => updateForm('material', event.target.value)}>
-              <option>Shadu Mati</option>
-              <option>Eco Friendly</option>
-              <option>Clay</option>
-              <option>Fiber</option>
+              {materialOptions.map((material) => <option key={material}>{material}</option>)}
             </select>
           </Field>
           <Field label="Price">
@@ -1127,9 +1249,26 @@ function MurtisPanel({ form, updateForm, handleImage, addMurti, adminSearch, set
           <span>{form.image ? 'Image selected' : 'Upload image'}</span>
           <input type="file" accept="image/*" onChange={handleImage} />
         </label>
-        {uploadInfo && <p className="upload-info">{uploadInfo}</p>}
-        {form.image && <img className="preview-image" src={form.image} alt="Selected murti preview" />}
-        <button className="primary-button form-submit" type="submit">Save Murti</button>
+        {form.image ? (
+          <div className="preview-card">
+            <img className="preview-image" src={form.image} alt="Selected murti preview" />
+            <div>
+              <strong>Selected photo</strong>
+              {uploadInfo && <span>{uploadInfo}</span>}
+            </div>
+          </div>
+        ) : (
+          uploadInfo && <p className="upload-info">{uploadInfo}</p>
+        )}
+        <div className="form-actions">
+          {editingMurtiId && (
+            <button className="outline-button" type="button" onClick={cancelEditMurti}>
+              <X size={18} />
+              Cancel
+            </button>
+          )}
+          <button className="primary-button form-submit" type="submit">{editingMurtiId ? 'Update Murti' : 'Save Murti'}</button>
+        </div>
       </form>
 
       <section className="recent-panel">
@@ -1151,7 +1290,13 @@ function MurtisPanel({ form, updateForm, handleImage, addMurti, adminSearch, set
             <select value={murti.status} onChange={(event) => updateMurtiStatus(murti.id, event.target.value)}>
               {availabilityOptions.map((status) => <option key={status}>{status}</option>)}
             </select>
-            <button className="delete-button" type="button" onClick={() => deleteMurti(murti.id)}>Delete</button>
+            <div className="row-actions">
+              <button className="edit-button" type="button" onClick={() => startEditMurti(murti)}>
+                <Pencil size={16} />
+                Edit
+              </button>
+              <button className="delete-button" type="button" onClick={() => deleteMurti(murti.id)}>Delete</button>
+            </div>
           </div>
         ))}
       </section>
@@ -1202,39 +1347,71 @@ function InquiriesPanel({ inquiries }) {
 
 function SettingsPanel({ settings, saveSettings }) {
   const [draft, setDraft] = useState(settings);
+  const [saveStatus, setSaveStatus] = useState('');
 
   const updateDraft = (key, value) => {
-    const next = { ...draft, [key]: value };
-    setDraft(next);
-    saveSettings(next);
+    setDraft((current) => ({ ...current, [key]: value }));
+    setSaveStatus('');
+  };
+
+  useEffect(() => {
+    setDraft(settings);
+  }, [settings]);
+
+  const submitSettings = async (event) => {
+    event.preventDefault();
+    const cleanedMobile = mobileDigits(draft.whatsappNumber);
+
+    if (cleanedMobile.length !== 10) {
+      setSaveStatus('Enter a valid 10 digit mobile number.');
+      return;
+    }
+
+    setSaveStatus('Saving settings...');
+
+    try {
+      await saveSettings({ ...draft, whatsappNumber: cleanedMobile });
+      setSaveStatus('Settings saved. WhatsApp inquiries and Call Now will use this number.');
+    } catch (error) {
+      setSaveStatus(`Could not save settings: ${error.message}`);
+    }
   };
 
   return (
     <section className="recent-panel full-panel">
       <h2>Website Settings</h2>
-      <div className="settings-grid">
-        <Field label="Shop Name">
-          <input value={draft.shopName} onChange={(event) => updateDraft('shopName', event.target.value)} />
-        </Field>
-        <Field label="WhatsApp Number">
-          <input value={draft.whatsappNumber} onChange={(event) => updateDraft('whatsappNumber', event.target.value)} placeholder="+91 98765 43210" />
-        </Field>
-        <div className="settings-note">
-          <strong>WhatsApp target</strong>
-          <span>{normalizePhoneNumber(draft.whatsappNumber) || 'Add a WhatsApp number with country code'}</span>
+      <form className="settings-form" onSubmit={submitSettings}>
+        <div className="settings-grid">
+          <Field label="Shop Name">
+            <input value={draft.shopName} onChange={(event) => updateDraft('shopName', event.target.value)} />
+          </Field>
+          <Field label="WhatsApp Number">
+            <input
+              value={draft.whatsappNumber}
+              onChange={(event) => updateDraft('whatsappNumber', event.target.value)}
+              placeholder="98765 43210"
+              inputMode="numeric"
+            />
+          </Field>
+          <div className="settings-note">
+            <strong>WhatsApp and call target</strong>
+            <span>{mobileDigits(draft.whatsappNumber) || 'Add a 10 digit mobile number'}</span>
+          </div>
+          <Field label="Default Visibility">
+            <select value={draft.defaultVisibility} onChange={(event) => updateDraft('defaultVisibility', event.target.value)}>
+              {availabilityOptions.map((status) => <option key={status}>{status}</option>)}
+            </select>
+          </Field>
+          <Field label="Festival Season Mode">
+            <select value={draft.festivalSeasonMode} onChange={(event) => updateDraft('festivalSeasonMode', event.target.value)}>
+              <option>On</option>
+              <option>Off</option>
+            </select>
+          </Field>
         </div>
-        <Field label="Default Visibility">
-          <select value={draft.defaultVisibility} onChange={(event) => updateDraft('defaultVisibility', event.target.value)}>
-            {availabilityOptions.map((status) => <option key={status}>{status}</option>)}
-          </select>
-        </Field>
-        <Field label="Festival Season Mode">
-          <select value={draft.festivalSeasonMode} onChange={(event) => updateDraft('festivalSeasonMode', event.target.value)}>
-            <option>On</option>
-            <option>Off</option>
-          </select>
-        </Field>
-      </div>
+        {saveStatus && <p className="upload-info">{saveStatus}</p>}
+        <button className="primary-button settings-save" type="submit">Save Settings</button>
+      </form>
     </section>
   );
 }
